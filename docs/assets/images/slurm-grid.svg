@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" role="img" aria-labelledby="title desc">
+  <title id="title">SLURM array grid</title>
+  <desc id="desc">A five by four grid of rounded squares. The top two rows are maize and the lower rows are blue.</desc>
+  <rect width="360" height="360" rx="36" fill="#00274c"/>
+  <g transform="translate(53 48)">
+    <g fill="#ffcb05">
+      <rect x="0" y="0" width="48" height="48" rx="8"/><rect x="68" y="0" width="48" height="48" rx="8"/><rect x="136" y="0" width="48" height="48" rx="8"/><rect x="204" y="0" width="48" height="48" rx="8"/>
+      <rect x="0" y="68" width="48" height="48" rx="8"/><rect x="68" y="68" width="48" height="48" rx="8"/><rect x="136" y="68" width="48" height="48" rx="8"/><rect x="204" y="68" width="48" height="48" rx="8"/>
+    </g>
+    <g fill="#346aa0">
+      <rect x="0" y="136" width="48" height="48" rx="8"/><rect x="68" y="136" width="48" height="48" rx="8"/><rect x="136" y="136" width="48" height="48" rx="8"/><rect x="204" y="136" width="48" height="48" rx="8"/>
+      <rect x="0" y="204" width="48" height="48" rx="8"/><rect x="68" y="204" width="48" height="48" rx="8"/><rect x="136" y="204" width="48" height="48" rx="8"/><rect x="204" y="204" width="48" height="48" rx="8"/>
+    </g>
+  </g>
+</svg>

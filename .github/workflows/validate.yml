@@ -1,0 +1,61 @@
+name: Validate the playbook
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scheduler-free-linux:
+    name: Linux / Python 3.10 minimum
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+      - name: Validate structure, links, downloads, and public-content guardrails
+        run: make validate
+      - name: Verify reproducible release assets
+        run: make release-check
+      - name: Check Bash and batch-script syntax
+        run: make syntax
+      - name: Compile the standard-library Python tools and example
+        run: make compile
+      - name: Run the synthetic workflow locally (no scheduler required)
+        run: make test-local
+
+  macos-bash-portability:
+    name: macOS / Bash 3.2 portability
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Show the compatibility shell
+        run: /bin/bash --version
+      - name: Check scripts with the macOS system Bash
+        run: make syntax BASH=/bin/bash
+      - name: Run the local workflow with the macOS system Bash
+        run: make test-local BASH=/bin/bash
+      - name: Confirm release assets reproduce across platforms
+        run: make release-check
+
+  site-build:
+    name: Jekyll site build
+    needs: scheduler-free-linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.12"
+          bundler-cache: true
+          working-directory: docs
+      - name: Build the site with strict front matter
+        working-directory: docs
+        run: bundle exec jekyll build --strict_front_matter --destination ../_site

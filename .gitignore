@@ -1,0 +1,14 @@
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+.bundle/
+vendor/
+.DS_Store
+__pycache__/
+*.py[cod]
+examples/logs/*
+!examples/logs/.gitkeep
+examples/results/*
+!examples/results/.gitkeep
+examples/.test-output/

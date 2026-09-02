@@ -1,0 +1,78 @@
+title: "Fritsche Lab SLURM Playbook"
+description: "A practical guide to measurable, modular, and recoverable CPU workflows with SLURM."
+
+remote_theme: just-the-docs/just-the-docs@v0.12.0
+
+url: "https://fritschelab.github.io"
+baseurl: "/slurm-playbook"
+repository: "FritscheLab/slurm-playbook"
+permalink: pretty
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+search_enabled: true
+search:
+  heading_level: 3
+  previews: 3
+  preview_words_before: 5
+  preview_words_after: 12
+  tokenizer_separator: /[\s/\-]+/
+  rel_url: true
+  button: true
+  focus_shortcut_key: "k"
+
+enable_copy_code_button: true
+heading_anchors: true
+back_to_top: true
+back_to_top_text: "Back to top"
+nav_sort: case_insensitive
+color_scheme: light
+
+mermaid:
+  version: "11.17.2"
+
+callouts_level: quiet
+callouts:
+  key:
+    title: Key point
+    color: blue
+  tip:
+    title: Practical tip
+    color: green
+  caution:
+    title: Caution
+    color: yellow
+  danger:
+    title: Stop and check
+    color: red
+  cluster:
+    title: U-M cluster note
+    color: purple
+
+aux_links:
+  "Tutorial slides":
+    - "/slurm-playbook/assets/downloads/slurm-tutorial-slides.pdf"
+  "GitHub repository":
+    - "https://github.com/FritscheLab/slurm-playbook"
+aux_links_new_tab: true
+
+nav_external_links:
+  - title: "U-M ARC SLURM guide"
+    url: "https://documentation.its.umich.edu/arc-hpc/slurm-user-guide"
+  - title: "SchedMD documentation"
+    url: "https://slurm.schedmd.com/"
+
+# Repository identity used by edit links.
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/FritscheLab/slurm-playbook"
+gh_edit_branch: "main"
+gh_edit_source: "docs"
+gh_edit_view_mode: "tree"
+
+exclude:
+  - Gemfile
+  - Gemfile.lock

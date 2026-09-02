@@ -1,0 +1,8 @@
+source "https://rubygems.org"
+
+# Keep this exact version aligned with ../.ruby-version and the CI site-build
+# job. Pinning the patch release makes local and hosted builds easier to compare.
+ruby "3.3.12"
+
+gem "github-pages", "232", group: :jekyll_plugins
+gem "jekyll-remote-theme", "0.4.3"
