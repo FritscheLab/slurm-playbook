@@ -72,7 +72,3 @@ gh_edit_repository: "https://github.com/FritscheLab/slurm-playbook"
 gh_edit_branch: "main"
 gh_edit_source: "docs"
 gh_edit_view_mode: "tree"
-
-exclude:
-  - Gemfile
-  - Gemfile.lock
