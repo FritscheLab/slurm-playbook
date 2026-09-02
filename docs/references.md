@@ -76,4 +76,8 @@ These are options to consider when raw arrays stop being the clearest interface.
 - Resource recommendations should come from representative accounting evidence, not an unexplained fixed value.
 - The six operating principles remain stable: prove locally, match resources to behavior, use stable manifests, throttle arrays, aggregate after success, and recover failed elements.
 
+### AI assistance and validation
+
+This playbook was developed with substantial generative AI assistance. The commands and examples—including those covered by repository tests—are starting points, not guarantees that they will work unchanged in your environment. Cluster configurations, software environments, and policies change. Always begin with a small, non-sensitive test, inspect the logs and results, and confirm current requirements in the official [U-M ARC](https://documentation.its.umich.edu/arc-hpc/slurm-user-guide) and [SchedMD](https://slurm.schedmd.com/) documentation before scaling up.
+
 If a source has changed or a link is broken, [open an issue](https://github.com/FritscheLab/slurm-playbook/issues/new) and include the affected page plus the current official source.

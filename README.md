@@ -109,6 +109,10 @@ The first command reproducibly rebuilds the standalone ZIP and checksums. The se
 
 If a command is unclear, an example fails, or a cluster policy appears outdated, [open a GitHub issue](https://github.com/FritscheLab/slurm-playbook/issues/new). Include the page, the command or policy in question, and a non-sensitive log excerpt or official source. Do not include credentials, account names, restricted paths, PHI, or private results.
 
+## AI assistance and validation
+
+This playbook was developed with substantial generative AI assistance. The commands and examples—including those covered by repository tests—are starting points, not guarantees that they will work unchanged in your environment. Cluster configurations, software environments, and policies change. Always begin with a small, non-sensitive test, inspect the logs and results, and confirm current requirements in the official [U-M ARC](https://documentation.its.umich.edu/arc-hpc/slurm-user-guide) and [SchedMD](https://slurm.schedmd.com/) documentation before scaling up.
+
 ## License
 
 MIT. See `LICENSE`.
