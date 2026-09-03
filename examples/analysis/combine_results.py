@@ -3,6 +3,10 @@
 
 The script fails closed: missing, duplicate, stale, malformed, or unexpected
 results prevent publication of the combined output.
+
+Its order is deliberate: establish the expected task set from the manifest,
+reject suspicious filenames, validate every expected row, calculate the FDR
+columns, and only then publish the summary and combined table.
 """
 
 from __future__ import annotations
@@ -19,6 +23,8 @@ import sys
 import tempfile
 from typing import Final, Iterable, Sequence
 
+# The manifest defines task identity; the result schema carries those fields
+# forward with estimates, runtime evidence, and a manifest-row fingerprint.
 MANIFEST_REQUIRED: Final[tuple[str, ...]] = (
     "task_id",
     "phenotype",
@@ -71,12 +77,16 @@ def _require_columns(
 
 
 def manifest_fingerprint(row: dict[str, str]) -> str:
+    """Recreate the worker's fingerprint from task-defining manifest fields."""
+
     payload = {key: row[key] for key in MANIFEST_REQUIRED}
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def read_manifest(path: Path) -> list[dict[str, str]]:
+    """Read a non-empty manifest with positive, unique task identifiers."""
+
     if not path.is_file():
         raise ValidationError(f"manifest does not exist: {path}")
     rows: list[dict[str, str]] = []
@@ -105,6 +115,8 @@ def read_manifest(path: Path) -> list[dict[str, str]]:
 
 
 def read_one_result(path: Path) -> dict[str, str]:
+    """Read exactly one result row with the complete worker output schema."""
+
     if not path.is_file() or path.stat().st_size == 0:
         raise ValidationError(f"missing or empty result: {path}")
     with path.open("r", encoding="utf-8", newline="") as handle:
@@ -117,6 +129,8 @@ def read_one_result(path: Path) -> dict[str, str]:
 
 
 def validate_numeric(row: dict[str, str], source: Path) -> None:
+    """Reject non-finite estimates and values outside their valid domains."""
+
     try:
         p_value = float(row["p_value"])
         beta = float(row["beta"])
@@ -156,6 +170,8 @@ def validate_numeric(row: dict[str, str], source: Path) -> None:
 def validate_result_against_manifest(
     result: dict[str, str], manifest_row: dict[str, str], source: Path
 ) -> None:
+    """Prove that one result is coherent with its exact manifest task."""
+
     expected_id = int(manifest_row["task_id"])
     try:
         observed_id = int(result["task_id"])
@@ -181,6 +197,10 @@ def validate_result_against_manifest(
 
 
 def benjamini_hochberg(p_values: Sequence[float]) -> list[float]:
+    """Return monotone Benjamini–Hochberg q-values in original task order."""
+
+    # Work from the largest p-value toward the smallest so running_min enforces
+    # the monotonicity required of adjusted p-values.
     count = len(p_values)
     order = sorted(range(count), key=lambda index: p_values[index])
     adjusted = [1.0] * count
@@ -194,6 +214,8 @@ def benjamini_hochberg(p_values: Sequence[float]) -> list[float]:
 
 
 def atomic_write_text(path: Path, content: str) -> None:
+    """Write and flush a neighbor temporary file, then rename it atomically."""
+
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temp_name = tempfile.mkstemp(
         prefix=f".{path.name}.", suffix=".tmp", dir=path.parent, text=True
@@ -211,6 +233,8 @@ def atomic_write_text(path: Path, content: str) -> None:
 
 
 def csv_text(rows: list[dict[str, str]], fieldnames: Sequence[str]) -> str:
+    """Render the combined rows in memory before any output is published."""
+
     import io
 
     buffer = io.StringIO(newline="")
@@ -223,6 +247,8 @@ def csv_text(rows: list[dict[str, str]], fieldnames: Sequence[str]) -> str:
 def markdown_summary(
     *, rows: list[dict[str, str]], run_label: str, input_dir: Path
 ) -> str:
+    """Build a compact human-readable QC companion to the combined CSV."""
+
     significant = [row for row in rows if row["significant_fdr_0_05"] == "yes"]
     fastest = min(rows, key=lambda row: float(row["runtime_seconds"]))
     slowest = max(rows, key=lambda row: float(row["runtime_seconds"]))
@@ -266,6 +292,9 @@ def main() -> int:
         if not input_dir.is_dir():
             raise ValidationError(f"input directory does not exist: {input_dir}")
 
+        # Check the directory inventory before reading expected results. This
+        # catches mistyped/non-canonical task files rather than silently
+        # ignoring evidence that the run directory may be incoherent.
         expected_ids = {int(row["task_id"]) for row in manifest_rows}
         unexpected_files: list[Path] = []
         for candidate in input_dir.glob("task_*.csv"):
@@ -281,6 +310,8 @@ def main() -> int:
             names = ", ".join(path.name for path in sorted(unexpected_files))
             raise ValidationError(f"unexpected task result files: {names}")
 
+        # Iterate in manifest order so the combined output is stable even when
+        # array elements finished in a different order.
         combined: list[dict[str, str]] = []
         for manifest_row in manifest_rows:
             task_id = int(manifest_row["task_id"])
@@ -289,6 +320,7 @@ def main() -> int:
             validate_result_against_manifest(result, manifest_row, result_path)
             combined.append(result)
 
+        # Add aggregate-only fields after every individual result has passed.
         p_values = [float(row["p_value"]) for row in combined]
         adjusted = benjamini_hochberg(p_values)
         for row, q_value in zip(combined, adjusted, strict=True):

@@ -90,7 +90,7 @@ You should see a header and one data row whose `task_id` is `3`. The numbers are
 ## 3. Test the complete workflow locally
 
 ```bash
-./scripts/test_local_pipeline.sh
+./tests/test_local_pipeline.sh
 ```
 
 The test executes and combines all 24 work units in an isolated temporary directory. It also verifies deliberate failure, atomic publication, manifest fingerprints, invalid task rejection, and safe partial-recovery behavior.
@@ -98,7 +98,7 @@ The test executes and combines all 24 work units in an isolated temporary direct
 **Checkpoint:** the last line is:
 
 ```text
-PASS: local outputs, safe cleanup, guarded recovery, and scheduler commands all checked out.
+PASS: local workflow, guarded recovery, and scheduler commands checked.
 ```
 
 If this checkpoint fails, stop before submitting. Read the first `ERROR:` line and confirm the Python and Bash versions.
@@ -126,9 +126,8 @@ An exit status of 0 confirms the failed task did not publish `task_011.csv`. You
 Use placeholders with `--dry-run`; they are not sent to SLURM:
 
 ```bash
-./scripts/submit_pipeline.sh \
-  --account training \
-  --partition standard \
+SLURM_ACCOUNT=training SLURM_PARTITION=standard \
+  ./scripts/submit_pipeline.sh \
   --max-concurrent 8 \
   --dry-run
 ```
@@ -186,7 +185,7 @@ This example is tested on Great Lakes. You can use the same scheduler pattern on
 For a real failed array, diagnose the element-specific logs first:
 
 ```bash
-./scripts/rerun_failed.sh "$array_job" --results-dir "$results_dir"
+./scripts/rerun_failed.sh "$array_job" "$results_dir"
 ```
 
 The helper does not submit anything. After correcting the cause, run the `submit_pipeline.sh` command it suggests. That command targets the **existing** result directory and schedules a replacement combine job. Do not point a partial recovery at a new directory: the combine stage needs the successful original results as well as the replacements.

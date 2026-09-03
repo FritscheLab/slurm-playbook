@@ -99,8 +99,8 @@ array_job=${submission#array_job=}
 array_job=${array_job%% *}
 results_dir=${submission#* results_dir=}
 
-sacct -nX -P -j "$array_job" -o JobIDRaw,State,ExitCode
-./scripts/rerun_failed.sh "$array_job" --results-dir "$results_dir"
+./scripts/sacct_summary.sh "$array_job"
+./scripts/rerun_failed.sh "$array_job" "$results_dir"
 ```
 
 The recovery helper reports failed terminal tasks and suggests the guarded resubmission command. Diagnose the logs and correct the cause before running that suggestion.

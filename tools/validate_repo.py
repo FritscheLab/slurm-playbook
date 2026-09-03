@@ -52,7 +52,7 @@ REQUIRED_FILES: Final[tuple[str, ...]] = (
     "examples/data/manifest.tsv",
     "examples/analysis/analyze_one_trait.py",
     "examples/analysis/combine_results.py",
-    "examples/scripts/test_local_pipeline.sh",
+    "examples/tests/test_local_pipeline.sh",
     "examples/slurm/array.sbatch",
     "tools/package_example.py",
     "tools/update_checksums.py",

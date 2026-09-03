@@ -23,11 +23,11 @@ Putting 24 independent models inside one allocation creates four problems:
 A manifest makes inputs, seeds, task size, and optional resource classes explicit:
 
 ```text
-task_id  phenotype          type        n      seed  work  resource_class
-1        pain_burden        continuous  42000  1101  5     small
-2        fatigue_score      continuous  38000  1102  5     small
-6        fibromyalgia_code  binary      48000  1106  7     medium
-24       diabetes_code      binary      50000  1124  6     medium
+task_id  phenotype          outcome_type  n      seed  work  resource_class
+1        pain_burden        continuous    42000  1101  5     small
+2        fatigue_score      continuous    38000  1102  5     small
+6        fibromyalgia_code  binary        48000  1106  7     medium
+24       diabetes_code      binary        50000  1124  6     medium
 ```
 
 A good manifest is:
@@ -45,7 +45,7 @@ Do not use directory listing order as an implicit scheduler API. File order can 
 The worker should handle exactly one row:
 
 ```bash
-./analysis/analyze_one_trait.py \
+python3 analysis/analyze_one_trait.py \
   --manifest data/manifest.tsv \
   --task-id 6 \
   --output results/local/task_006.csv
@@ -68,7 +68,7 @@ TASK_ID="${SLURM_ARRAY_TASK_ID:?}"
 RESULTS_DIR="${RESULTS_DIR_OVERRIDE:-results/${SLURM_ARRAY_JOB_ID:?}}"
 printf -v OUTPUT '%s/task_%03d.csv' "$RESULTS_DIR" "$TASK_ID"
 
-python analysis/analyze_one_trait.py \
+"$PYTHON_BIN" analysis/analyze_one_trait.py \
   --manifest data/manifest.tsv \
   --task-id "$TASK_ID" \
   --output "$OUTPUT"
@@ -81,15 +81,12 @@ python analysis/analyze_one_trait.py \
 ```bash
 export SLURM_ACCOUNT='<your-account>'
 export SLURM_PARTITION='<your-partition>'
-array_job=$(./scripts/submit_array.sh \
-  --account="$SLURM_ACCOUNT" \
-  --partition="$SLURM_PARTITION" \
-  --max-concurrent 8)
+array_submission=$(./scripts/submit_array.sh --max-concurrent 8)
 
-printf 'array_job=%s\n' "$array_job"
+printf '%s\n' "$array_submission"
 ```
 
-The wrapper validates the manifest, derives the array expression from its actual task IDs, creates the log directory, supplies absolute log and working-directory paths, and adds the `%8` concurrency cap. Run it once with `--dry-run` if you want to inspect the resulting `sbatch` command before submission.
+The wrapper reads account and partition from the exported variables, validates the manifest, derives the array expression from its actual task IDs, creates the log directory, supplies absolute log and working-directory paths, and adds the `%8` concurrency cap. It prints both the array job ID and result directory. Run it once with `--dry-run` if you want to inspect the resulting `sbatch` command before submission.
 
 ## One envelope still applies
 

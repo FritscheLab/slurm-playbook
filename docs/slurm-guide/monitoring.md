@@ -11,6 +11,15 @@ Treat an array as both one workflow and many independently observable tasks.
 
 In the commands below, replace `JOB_ID` with one job ID and `ARRAY_JOB_ID` with the base ID printed by the submission wrapper. They are visible placeholders, not shell variables.
 
+For the worked example, start with its two small helpers:
+
+```bash
+./scripts/monitor.sh ARRAY_JOB_ID
+./scripts/sacct_summary.sh ARRAY_JOB_ID
+```
+
+The first shows the live array in compact and per-element views. The second prints one completed accounting table. The commands below explain those views and add optional diagnostics when you need them.
+
 ## While queued or running
 
 ```bash

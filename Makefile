@@ -17,7 +17,7 @@ compile:
 test: test-local
 
 test-local:
-	$(BASH) examples/scripts/test_local_pipeline.sh
+	$(BASH) examples/tests/test_local_pipeline.sh
 
 package-example:
 	$(PYTHON) tools/package_example.py

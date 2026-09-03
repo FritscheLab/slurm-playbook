@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Run one manifest task through the same guarded output contract used by the
+# SLURM worker, making local debugging representative of a batch run.
+
+# Fail on command errors and unset variables, including failures inside pipes.
 set -Eeuo pipefail
 
 usage() {
@@ -11,10 +15,14 @@ variable.
 EOF
 }
 
+# Resolve paths from this file so the wrapper works from any directory.
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 PYTHON_BIN=${PYTHON_BIN:-python3}
 
+case ${1:-} in
+  -h|--help) usage; exit 0 ;;
+esac
 [[ $# -ge 1 ]] || { usage >&2; exit 64; }
 TASK_ID=$1
 shift
@@ -44,17 +52,23 @@ done
   exit 64
 }
 
+# Prepare verifies the manifest and directory ownership, then returns a
+# canonical result path on stdout.
 RESULTS_DIR=$("$PYTHON_BIN" "$PROJECT_ROOT/analysis/pipeline_guard.py" prepare \
   --manifest "$PROJECT_ROOT/data/manifest.tsv" \
   --results-dir "$RESULTS_DIR")
+# Remove this task's old result and aggregate publications before attempting
+# the rerun, so a later failure cannot leave stale output looking successful.
 RESULTS_DIR=$("$PYTHON_BIN" "$PROJECT_ROOT/analysis/pipeline_guard.py" invalidate \
   --manifest "$PROJECT_ROOT/data/manifest.tsv" \
   --results-dir "$RESULTS_DIR" \
   --task-id "$TASK_ID" \
   --aggregates)
+# Sourcing preserves the validated Python path and thread limits in this shell.
 source "$SCRIPT_DIR/runtime_setup.sh"
 cd "$PROJECT_ROOT"
 print_job_context
+# Zero-padded names are the file contract expected by the combine stage.
 printf -v OUTPUT '%s/task_%03d.csv' "$RESULTS_DIR" "$TASK_ID"
 "$PYTHON_BIN" analysis/analyze_one_trait.py \
   --manifest data/manifest.tsv \

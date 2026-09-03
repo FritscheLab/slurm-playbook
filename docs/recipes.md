@@ -67,12 +67,9 @@ my_program --threads "$SLURM_CPUS_PER_TASK"
 ## Dynamic manifest array
 
 ```bash
-array_job=$(./scripts/submit_array.sh \
-  --account="$SLURM_ACCOUNT" \
-  --partition="$SLURM_PARTITION" \
-  --max-concurrent 8)
+array_submission=$(./scripts/submit_array.sh --max-concurrent 8)
 
-printf 'array_job=%s\n' "$array_job"
+printf '%s\n' "$array_submission"
 ```
 
 This tested wrapper uses the IDs that actually appear in the manifest, so it also handles a valid non-contiguous task set.
@@ -89,8 +86,6 @@ printf -v OUTPUT 'results/%s/task_%03d.csv' \
 
 ```bash
 submission=$(./scripts/submit_pipeline.sh \
-  --account="$SLURM_ACCOUNT" \
-  --partition="$SLURM_PARTITION" \
   --max-concurrent 8)
 
 printf '%s\n' "$submission"
@@ -104,7 +99,7 @@ The wrapper submits the array first, then a combine job with an `afterok` depend
 ## Find failed elements
 
 ```bash
-./scripts/rerun_failed.sh "$array_job" --results-dir "$results_dir"
+./scripts/rerun_failed.sh "$array_job" "$results_dir"
 ```
 
 The helper reports failed **terminal** elements and prints a recovery command; it does not mistake pending or running tasks for failures and does not submit anything automatically.

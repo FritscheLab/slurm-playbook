@@ -20,7 +20,7 @@ The worked example is tested on **Great Lakes**. The same SLURM pattern transfer
 - A checkpoint-based [Start Here](docs/slurm-guide/quick-start.md) walkthrough
 - Copy/paste templates with explanations and guardrails
 - Focused Mermaid state diagrams for the job lifecycle, resource-tuning loop, and fan-out/fan-in dependency pattern
-- A tested synthetic 24-task array example in `examples/`
+- A tested synthetic 24-task array example you can [browse in `examples/`](examples/)
 - Optional downloadable tutorial slides, quick-reference PDF, and standalone example ZIP
 - Repository validation workflow and local smoke tests
 
@@ -32,13 +32,13 @@ From a repository clone:
 git clone https://github.com/FritscheLab/slurm-playbook.git
 cd slurm-playbook/examples
 ./scripts/run_local.sh 3
-./scripts/test_local_pipeline.sh
+./tests/test_local_pipeline.sh
 ```
 
 `run_local.sh` writes `results/local/task_003.csv`. The test finishes with:
 
 ```text
-PASS: local outputs, safe cleanup, guarded recovery, and scheduler commands all checked out.
+PASS: local workflow, guarded recovery, and scheduler commands checked.
 ```
 
 If you use the standalone download instead, unzip `slurm-example-pipeline.zip` and run the same commands from its top-level directory:
@@ -47,7 +47,7 @@ If you use the standalone download instead, unzip `slurm-example-pipeline.zip` a
 unzip slurm-example-pipeline.zip
 cd slurm-example-pipeline
 ./scripts/run_local.sh 3
-./scripts/test_local_pipeline.sh
+./tests/test_local_pipeline.sh
 ```
 
 Continue with [Start Here](docs/slurm-guide/quick-start.md) for dry-run validation and the Great Lakes acceptance path.

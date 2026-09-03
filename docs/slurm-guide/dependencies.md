@@ -52,8 +52,6 @@ Use `--parsable` so submission commands return machine-readable job IDs. The wor
 export SLURM_ACCOUNT='<your-account>'
 export SLURM_PARTITION='<your-partition>'
 submission=$(./scripts/submit_pipeline.sh \
-  --account="$SLURM_ACCOUNT" \
-  --partition="$SLURM_PARTITION" \
   --max-concurrent 8)
 
 printf '%s\n' "$submission"
@@ -81,16 +79,16 @@ Before producing a final file, the combine stage should verify:
 
 ## Diagnose first, rerun second
 
-Use allocation-level accounting to find failed array elements:
+Start with the example's readable accounting table:
 
 ```bash
-sacct -nX -P -j "$array_job" -o JobIDRaw,State,ExitCode
+./scripts/sacct_summary.sh "$array_job"
 ```
 
-Then inspect each element's state, exit code, and task-specific log. The helper reports the failed terminal elements and prints a guarded recovery command:
+Inspect each element's state, exit code, and task-specific log. Then let the recovery helper filter the failed terminal elements and print a guarded recovery command:
 
 ```bash
-./scripts/rerun_failed.sh "$array_job" --results-dir "$results_dir"
+./scripts/rerun_failed.sh "$array_job" "$results_dir"
 ```
 
 After correcting the root cause, run the suggested `submit_pipeline.sh` command to rerun only those IDs and schedule a replacement combine job. Preserve successful results unless the correction changes their scientific validity. When code, inputs, or parameters changed globally, a full clean rerun may be the correct choice.

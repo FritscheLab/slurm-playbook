@@ -4,6 +4,11 @@
 This small command-line helper keeps path, manifest, and recovery checks out of
 the Bash wrappers so those wrappers remain compatible with macOS Bash 3.2.
 Only the Python standard library is used.
+
+The four subcommands form the safety boundary used by the wrappers: ``resolve``
+canonicalizes a path, ``prepare`` initializes or cleans an owned run,
+``invalidate`` removes named stale publications, and ``select`` validates a
+full-run or recovery array specification.
 """
 
 from __future__ import annotations
@@ -18,6 +23,8 @@ import sys
 import tempfile
 from typing import Final, Sequence
 
+# Reuse the combiner's readers so submission-time recovery checks enforce the
+# same manifest and result contracts as the final fan-in stage.
 from combine_results import (
     TASK_FILE_PATTERN,
     ValidationError,
@@ -42,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     select = subparsers.add_parser(
-        "select", help="validate a task selection and print SPEC|PARTIAL"
+        "select", help="validate a task selection and print its SLURM array spec"
     )
     select.add_argument("--manifest", required=True, type=Path)
     select.add_argument("--tasks", help="SLURM task IDs/ranges")
@@ -75,6 +82,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def manifest_digest(path: Path) -> str:
+    """Hash the complete manifest used to establish result-directory ownership."""
+
     import hashlib
 
     digest = hashlib.sha256()
@@ -85,6 +94,8 @@ def manifest_digest(path: Path) -> str:
 
 
 def marker_payload(manifest: Path) -> dict[str, object]:
+    """Build the small versioned ownership record stored with every run."""
+
     return {
         "format": MARKER_FORMAT,
         "version": MARKER_VERSION,
@@ -93,6 +104,8 @@ def marker_payload(manifest: Path) -> dict[str, object]:
 
 
 def read_marker(results_dir: Path) -> dict[str, object]:
+    """Read and validate a result directory's ownership marker."""
+
     marker = results_dir / MARKER_NAME
     if not marker.is_file():
         raise ValidationError(
@@ -114,6 +127,8 @@ def read_marker(results_dir: Path) -> dict[str, object]:
 
 
 def require_current_marker(results_dir: Path, manifest: Path) -> None:
+    """Require ownership by this pipeline and the current manifest version."""
+
     payload = read_marker(results_dir)
     if payload.get("manifest_sha256") != manifest_digest(manifest):
         raise ValidationError(
@@ -123,6 +138,8 @@ def require_current_marker(results_dir: Path, manifest: Path) -> None:
 
 
 def atomic_write_marker(results_dir: Path, manifest: Path) -> None:
+    """Publish the ownership marker without exposing a partially written file."""
+
     marker = results_dir / MARKER_NAME
     content = json.dumps(marker_payload(manifest), indent=2, sort_keys=True) + "\n"
     descriptor, temp_name = tempfile.mkstemp(
@@ -141,7 +158,11 @@ def atomic_write_marker(results_dir: Path, manifest: Path) -> None:
 
 
 def guard_path(path: Path) -> Path:
+    """Resolve a candidate and reject roots that would be dangerous to clean."""
+
     resolved = path.expanduser().resolve()
+    # Individual run directories beneath ``results/`` are allowed, but these
+    # broad roots themselves are never valid recursive-cleanup targets.
     protected = {
         Path(resolved.anchor),
         Path.home().resolve(),
@@ -156,14 +177,19 @@ def guard_path(path: Path) -> Path:
 
 
 def prepare_directory(manifest: Path, results_dir: Path, *, clean: bool) -> Path:
+    """Validate, initialize, or explicitly clean one pipeline-owned run."""
+
     manifest = manifest.resolve()
-    # read_manifest validates required columns, positive unique IDs, and non-empty input.
+    # read_manifest validates required columns, positive unique IDs, and a
+    # non-empty input before the directory can be marked as pipeline-owned.
     read_manifest(manifest)
     results_dir = guard_path(results_dir)
 
     if results_dir.exists() and not results_dir.is_dir():
         raise ValidationError(f"result path exists but is not a directory: {results_dir}")
 
+    # --clean is intentionally conservative: a non-empty directory must prove
+    # pipeline ownership before recursive removal is allowed.
     if clean and results_dir.exists():
         has_entries = any(results_dir.iterdir())
         if has_entries:
@@ -192,6 +218,8 @@ def prepare_directory(manifest: Path, results_dir: Path, *, clean: bool) -> Path
         # Multiple array elements can reach this point together.
         results_dir.mkdir(parents=True, exist_ok=True)
 
+    # Rewriting the marker is safe under concurrent array starts because each
+    # element publishes identical content with an atomic rename.
     atomic_write_marker(results_dir, manifest)
     return results_dir
 
@@ -243,6 +271,8 @@ def invalidate_outputs(
 
 
 def parse_selection(spec: str | None, valid_ids: Sequence[int]) -> set[int]:
+    """Expand a SLURM-style ID/range list and reject gaps or duplicates."""
+
     all_ids = set(valid_ids)
     if spec is None:
         return all_ids
@@ -276,6 +306,8 @@ def parse_selection(spec: str | None, valid_ids: Sequence[int]) -> set[int]:
 
 
 def compress_ids(task_ids: Sequence[int] | set[int]) -> str:
+    """Compress sorted task IDs into the range syntax accepted by SLURM."""
+
     ordered = sorted(task_ids)
     ranges: list[str] = []
     start = previous = ordered[0]
@@ -295,6 +327,8 @@ def validate_recovery(
     results_dir: Path,
     selected: set[int],
 ) -> None:
+    """Prove that every task excluded from a recovery is already valid."""
+
     results_dir = guard_path(results_dir)
     if not results_dir.is_dir():
         raise ValidationError(
@@ -320,6 +354,8 @@ def validate_recovery(
         names = ", ".join(path.name for path in sorted(unexpected))
         raise ValidationError(f"unexpected task result files: {names}")
 
+    # Selected tasks are allowed to be absent or corrupt—they are precisely the
+    # work being repaired. Every unselected task must already be trustworthy.
     for manifest_row in manifest_rows:
         task_id = int(manifest_row["task_id"])
         if task_id in selected:
@@ -330,6 +366,8 @@ def validate_recovery(
 
 
 def select_tasks(manifest: Path, tasks: str | None, results_dir: Path | None) -> str:
+    """Return the SLURM array spec after validating submission safety."""
+
     manifest = manifest.resolve()
     manifest_rows = read_manifest(manifest)
     valid_ids = [int(row["task_id"]) for row in manifest_rows]
@@ -342,12 +380,14 @@ def select_tasks(manifest: Path, tasks: str | None, results_dir: Path | None) ->
                 "to the existing run you want to repair"
             )
         validate_recovery(manifest, manifest_rows, results_dir, selected)
-    return f"{compress_ids(selected)}|{'1' if partial else '0'}"
+    return compress_ids(selected)
 
 
 def main() -> int:
     args = parse_args()
     try:
+        # Successful subcommands print exactly one machine-readable value to
+        # stdout; the Bash wrappers capture it with command substitution.
         if args.command == "resolve":
             print(guard_path(args.path))
         elif args.command == "prepare":

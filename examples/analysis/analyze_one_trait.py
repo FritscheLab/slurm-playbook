@@ -4,6 +4,10 @@
 This is a training worker, not a scientifically valid association model. Its
 purpose is to demonstrate a durable interface: one manifest row in, one
 validated result row out, non-zero exit on failure, and atomic publication.
+
+Read this file from top to bottom as four stages: validate the manifest
+contract, generate one deterministic synthetic data set, validate the derived
+statistics, and publish exactly one task result.
 """
 
 from __future__ import annotations
@@ -21,6 +25,8 @@ import tempfile
 import time
 from typing import Final, Iterable
 
+# These two tuples are the worker's input and output contracts. The combiner
+# independently checks the same fields before it accepts a task publication.
 REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
     "task_id",
     "phenotype",
@@ -71,6 +77,8 @@ def _require_columns(fieldnames: Iterable[str] | None) -> None:
 
 
 def read_manifest_row(manifest: Path, task_id: int) -> dict[str, str]:
+    """Return the unique manifest row for ``task_id`` after validating all IDs."""
+
     if task_id < 1:
         raise UserInputError("task ID must be a positive integer")
     if not manifest.is_file():
@@ -102,6 +110,8 @@ def read_manifest_row(manifest: Path, task_id: int) -> dict[str, str]:
 
 
 def validate_row(row: dict[str, str]) -> tuple[int, int, int, str]:
+    """Parse and validate the fields used by the synthetic worker."""
+
     outcome_type = row["outcome_type"].strip().lower()
     if outcome_type not in VALID_OUTCOME_TYPES:
         raise UserInputError(
@@ -124,13 +134,16 @@ def validate_row(row: dict[str, str]) -> tuple[int, int, int, str]:
 
 
 def row_fingerprint(row: dict[str, str]) -> str:
+    """Fingerprint task-defining fields so stale results can be rejected later."""
+
     payload = {key: row[key] for key in REQUIRED_COLUMNS}
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def logistic(value: float) -> float:
-    # Protect against overflow with larger-magnitude inputs.
+    """Evaluate the logistic function safely for large-magnitude inputs."""
+
     if value >= 0:
         exp_neg = math.exp(-value)
         return 1.0 / (1.0 + exp_neg)
@@ -214,6 +227,11 @@ def run_synthetic_model(
 
 
 def atomic_write_csv(output: Path, row: dict[str, object]) -> None:
+    """Publish a complete CSV with an atomic rename in the destination directory."""
+
+    # The temporary file lives beside the destination so os.replace remains an
+    # atomic filesystem operation. A killed worker therefore leaves either the
+    # old complete result or no published result, never a partial CSV.
     output.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temp_name = tempfile.mkstemp(
         prefix=f".{output.name}.", suffix=".tmp", dir=output.parent, text=True
@@ -260,6 +278,8 @@ def main() -> int:
         output.unlink(missing_ok=True)
         n, seed, work, outcome_type = validate_row(row)
 
+        # This opt-in failure hook supports recovery exercises and test cases;
+        # it runs only after any older publication has been invalidated.
         requested_failure = os.environ.get("SIMULATE_FAILURE_TASK_ID")
         if requested_failure is not None:
             try:
@@ -278,6 +298,8 @@ def main() -> int:
             f"type={outcome_type} n={n} seed={seed} output={output}",
             flush=True,
         )
+        # The manifest seed makes the scientific-looking values reproducible.
+        # Wall-clock runtime below remains an intentionally real measurement.
         estimates = run_synthetic_model(
             task_id=args.task_id,
             n=n,
@@ -293,6 +315,8 @@ def main() -> int:
             raise RuntimeError("computed event_rate is not finite")
         if not math.isfinite(elapsed) or elapsed < 0.0:
             raise RuntimeError("measured runtime is not finite and non-negative")
+        # Validate every derived value before constructing the publication.
+        # Formatting here also creates a stable, portable CSV representation.
         result: dict[str, object] = {
             "task_id": args.task_id,
             "phenotype": row["phenotype"],
