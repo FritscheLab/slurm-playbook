@@ -60,6 +60,8 @@ aux_links:
 aux_links_new_tab: true
 
 nav_external_links:
+  - title: "Fritsche Lab"
+    url: "https://fritschelab.github.io/"
   - title: "U-M ARC SLURM guide"
     url: "https://documentation.its.umich.edu/arc-hpc/slurm-user-guide"
   - title: "SchedMD documentation"

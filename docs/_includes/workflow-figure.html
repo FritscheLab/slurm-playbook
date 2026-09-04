@@ -1,0 +1,51 @@
+<figure class="workflow-figure">
+  <div class="workflow-figure__heading">From one task to a workflow</div>
+  <div class="workflow-figure__steps" aria-hidden="true">
+    <div class="workflow-figure__step">
+      <div class="workflow-figure__label"><span>01</span><strong>Prove</strong></div>
+      <p class="workflow-figure__subhead">One local task</p>
+    </div>
+    <div class="workflow-figure__step">
+      <div class="workflow-figure__label"><span>02</span><strong>Scale</strong></div>
+      <p class="workflow-figure__subhead">Independent tasks</p>
+    </div>
+    <div class="workflow-figure__step">
+      <div class="workflow-figure__label"><span>03</span><strong>Combine</strong></div>
+      <p class="workflow-figure__subhead">After success</p>
+    </div>
+  </div>
+  <svg class="workflow-figure__diagram" viewBox="0 0 400 256" role="img" aria-labelledby="workflow-title workflow-desc">
+    <title id="workflow-title">Prove, scale, then combine</title>
+    <desc id="workflow-desc">A task is first checked locally. The same task pattern expands into six representative independent array tasks, whose outputs feed one combined result only after every array task succeeds. This is a conceptual workflow, not live job status.</desc>
+    <g class="workflow-figure__connections" fill="none">
+      <path d="M64 128H114 M114 33V223 M114 33H176 M114 71H176 M114 109H176 M114 147H176 M114 185H176 M114 223H176"/>
+      <path d="M224 33H286 M224 71H286 M224 109H286 M224 147H286 M224 185H286 M224 223H286 M286 33V223 M286 128H336"/>
+    </g>
+    <g class="workflow-figure__arrows" fill="none">
+      <path d="m106 123 8 5-8 5 M328 123l8 5-8 5"/>
+    </g>
+    <rect class="workflow-figure__local" x="16" y="98" width="48" height="60" rx="7"/>
+    <g class="workflow-figure__local-lines" fill="none">
+      <path d="M29 116h22 M29 128h16 M29 140h22"/>
+    </g>
+    <g class="workflow-figure__tasks">
+      <rect x="176" y="20" width="48" height="26" rx="5"/>
+      <rect x="176" y="58" width="48" height="26" rx="5"/>
+      <rect x="176" y="96" width="48" height="26" rx="5"/>
+      <rect x="176" y="134" width="48" height="26" rx="5"/>
+      <rect x="176" y="172" width="48" height="26" rx="5"/>
+      <rect x="176" y="210" width="48" height="26" rx="5"/>
+    </g>
+    <g class="workflow-figure__task-lines" fill="none">
+      <path d="M190 33h20 M190 71h20 M190 109h20 M190 147h20 M190 185h20 M190 223h20"/>
+    </g>
+    <rect class="workflow-figure__result" x="336" y="98" width="48" height="60" rx="7"/>
+    <g class="workflow-figure__result-lines" fill="none">
+      <path d="M349 116h22 M349 128h22 M349 140h22"/>
+    </g>
+  </svg>
+  <figcaption class="workflow-figure__caption">
+    <span class="workflow-figure__key">Independent tasks. One reproducible result.</span>
+    <span class="workflow-figure__note">Combine only after all tasks succeed.</span>
+  </figcaption>
+</figure>

@@ -6,3 +6,5 @@ ruby "3.3.12"
 
 gem "github-pages", "232", group: :jekyll_plugins
 gem "jekyll-remote-theme", "0.4.3"
+# Required by the pinned Just the Docs theme when loaded as a remote theme.
+gem "rake", ">= 12.3.1"

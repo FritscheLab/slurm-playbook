@@ -6,26 +6,31 @@ has_toc: false
 description: "Practical SLURM guidance and a tested synthetic pipeline for single-node CPU workflows."
 ---
 
-<div class="hero-panel">
-  <div>
-    <p class="hero-kicker">Fritsche Lab · Practical computing guide</p>
-    <h1>SLURM Playbook</h1>
-    <p class="fs-5">From one correct local task to right-sized, observable, recoverable parallel computing.</p>
-    <p class="hero-actions">
+<section class="hero-panel" aria-labelledby="playbook-title">
+  <div class="hero-copy">
+    <p class="hero-kicker">Fritsche Lab · University of Michigan</p>
+    <h1 id="playbook-title">SLURM Playbook</h1>
+    <p class="hero-summary">Start with one working task. Scale to independent jobs, measure what they use, and recover only what failed.</p>
+    <div class="hero-actions">
       <a class="btn btn-maize" href="{{ site.baseurl }}{% link slurm-guide/quick-start.md %}">Start here</a>
-      <a class="btn btn-outline-light" href="{{ site.baseurl }}{% link example-pipeline.md %}">See how it works</a>
-      <a class="btn btn-outline-light" href="{{ site.baseurl }}{% link quick-reference.md %}">Command lookup</a>
-    </p>
+      <a class="btn btn-outline-light" href="{{ site.baseurl }}{% link example-pipeline.md %}">Explore the example</a>
+    </div>
+    <a class="hero-reference" href="{{ site.baseurl }}{% link quick-reference.md %}">Command lookup <span aria-hidden="true">→</span></a>
   </div>
-  <img src="{{ site.baseurl }}/assets/images/slurm-grid.svg" alt="Stylized grid representing a throttled SLURM job array">
+  {% include workflow-figure.html %}
+</section>
+
+<div class="evidence-strip" aria-label="Workflow principles">
+  <div><strong>Measurable</strong><span>Pilot, inspect, and right-size requests.</span></div>
+  <div><strong>Modular</strong><span>One stable work unit per task.</span></div>
+  <div><strong>Recoverable</strong><span>Keep good results. Rerun failures.</span></div>
 </div>
 
 This is the lab reference to reach for when you have a concrete question: *How many CPUs should I request? Why is my job pending? How do I rerun only task 11? Where should the combine step run?*
 
 If you can already run a command in a Unix shell, the guide will help you move it into a single-node CPU job or array on U-M's SLURM clusters. It covers serial and threaded programs, single-node process pools, independent work units, one fan-in stage, accounting, and recovery. For MPI, multi-node jobs, GPUs, cluster administration, or project-specific compliance decisions, start with ARC or the appropriate specialist instead.
 
-{: .key }
-A good SLURM workflow is **measurable, modular, and recoverable**. Treat each resource request as a hypothesis: pilot it, inspect the evidence, and revise it.
+Treat each resource request as a hypothesis: pilot it, inspect the evidence, and revise it.
 
 ## Start with the problem in front of you
 

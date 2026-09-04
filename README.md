@@ -100,6 +100,7 @@ The first command reproducibly rebuilds the standalone ZIP and checksums. The se
 
 ## Customize for the lab
 
+- The site follows the typography, palette, logo, and component styling of `fritschelab.github.io`. Shared visual tokens live in `docs/_sass/custom/`; the homepage workflow schematic lives in `docs/_includes/workflow-figure.html` and uses CSS-controlled SVG colors for screen and print.
 - Update cluster/account examples without hard-coding a real shortcode.
 - Add lab-specific module or Conda setup to `examples/scripts/runtime_setup.sh`.
 - If you fork or rename the repository, update its URL and base path in `docs/_config.yml`.
